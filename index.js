@@ -1,34 +1,53 @@
-const port = 4000;
 const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
+const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const app = express();
+const port = 4000;
 const multer = require("multer");
 const path = require("path");
-const cors = require("cors");
+
+
 
 app.use(express.json());
 app.use(cors());
 
-// ✅ Database connection with error handling
-mongoose.connect("mongodb+srv://hanaalkadry:Nawras.1991@cluster0.vmfhsu8.mongodb.net/forever")
-  .then(() => {
-    console.log("✅ Connected to MongoDB Atlas");
-  })
-  .catch((err) => {
-    console.log("❌ MongoDB connection error:", err);
-  });
 
-// ✅ API route test
-app.get("/", (req, res) => {
+//Database Connection with MongoDB
+mongoose.connect("mongodb+srv://hanaalkadry:Nawras.1991@cluster0.vmfhsu8.mongodb.net/forever");
+
+//API Creation
+
+app.get("/",(req,res)=>{
   res.send("Express App is Running");
-});
+})
 
-// ✅ Start server
-app.listen(port, (error) => {
-  if (!error) {
-    console.log("🚀 Server Running on Port " + port);
-  } else {
-    console.log("❌ Error: " + error);
+//Image Storage Engine
+
+const storage = multer.diskStorage({
+  destination: './backend/upload/images',
+  filename:(req,file,cb)=>{
+    return cb(null,`${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`)
   }
-});
+})
+
+const upload = multer({storage:storage})
+
+
+//Creating Upload Endpoint for images
+app.use('/images',express.static('upload/images'))
+
+app.post("/upload",upload.single('product'),(req,res)=>{
+  res.json({
+    success: 1,
+    image_url:`http://localhost:${port}/images/${req.file.filename}`
+  })
+})
+
+app.listen(port,(error)=>{
+    if(!error){
+      console.log("Server Running on Port " +port)
+    }else{
+      console.log("Error : "+error)
+    }
+})
